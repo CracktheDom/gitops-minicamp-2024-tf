@@ -1,0 +1,86 @@
+# https://github.com/marketplace/actions/opentofu-setup-tofu
+# https://github.com/terraform-linters/setup-tflint
+
+name: 'OpenTofu'
+
+on:
+  push:
+    branches: [ $default-branch ]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  tflint:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+    - uses: actions/checkout@v4
+      name: Checkout source code
+
+    - uses: actions/cache@v4
+      name: Cache plugin dir
+      with:
+        path: ~/.tflint.d/plugins
+        key: ${{ matrix.os }}-tflint-${{ hashFiles('.tflint.hcl') }}
+
+    - uses: terraform-linters/setup-tflint@v4
+      name: Setup TFLint
+      with:
+        tflint_version: v0.52.0
+
+    - name: Show version
+      run: tflint --version
+
+    - name: Init TFLint
+      run: tflint --init
+      env:
+        # https://github.com/terraform-linters/tflint/blob/master/docs/user-guide/plugins.md#avoiding-rate-limiting
+        GITHUB_TOKEN: ${{ github.token }}
+
+    - name: Run TFLint
+      run: tflint -f compact
+
+  opentofu:
+    name: 'OpenTofu'
+    runs-on: ubuntu-latest
+    environment: production
+    # `environment` variable is not necessary, but if it is used it must be used consistently 
+
+    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: ./terraform
+
+    steps:
+    # Checkout the repository to the GitHub Actions runner
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
+    - name: Setup OpenTofu
+      uses: opentofu/setup-opentofu@v1
+
+    # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+    - name: OpenTofu Init
+      run: tofu init
+
+    # Checks that all Terraform configuration files adhere to a canonical format
+    - name: OpenTofu Format
+      run: tofu fmt -check
+
+    # Generates an execution plan for Terraform
+    - name: OpenTofu Plan
+      run: tofu plan -input=false
+
+      # On push to $default-branch, build or change infrastructure according to Terraform configuration files
+      # Note: It is recommended to set up a required "strict" status check in your repository for "Terraform Cloud". See the documentation on "strict" required status checks for more information: https://help.github.com/en/github/administering-a-repository/types-of-required-status-checks
+    # - name: Terraform Apply
+    #   if: github.ref == 'refs/heads/$default-branch' && github.event_name == 'push'
+    #   run: terraform apply -auto-approve -input=false
