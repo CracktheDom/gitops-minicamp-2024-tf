@@ -63,19 +63,20 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
-    # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
-    - name: Setup OpenTofu
+    # Install the latest version of OpenTofu CLI
       uses: opentofu/setup-opentofu@v1
+      with:
+        tofu_wrapper: false
 
-    # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
+    # Initialize a new or existing OpenTofu working directory by creating initial files, loading any remote state, downloading modules, etc.
     - name: OpenTofu Init
       run: tofu init
 
-    # Checks that all Terraform configuration files adhere to a canonical format
+    # Checks that all OpenTofu configuration files adhere to a canonical format
     - name: OpenTofu Format
       run: tofu fmt -check
 
-    # Generates an execution plan for Terraform
+    # Generates an execution plan for OpenTofu
     - name: OpenTofu Plan
       run: tofu plan -input=false
 
