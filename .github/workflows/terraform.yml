@@ -5,7 +5,7 @@ name: 'OpenTofu'
 
 on:
   push:
-    branches: [ $default-branch ]
+    branches: [ main ]
   pull_request:
 
 permissions:
@@ -50,7 +50,7 @@ jobs:
     name: 'OpenTofu'
     runs-on: ubuntu-latest
     environment: production
-    # `environment` variable is not necessary, but if it is used it must be used consistently 
+    # `environment` variable is not necessary, but if it is used, it must be used consistently 
 
     # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
     defaults:
