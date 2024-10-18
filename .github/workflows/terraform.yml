@@ -1,6 +1,3 @@
-# https://github.com/marketplace/actions/opentofu-setup-tofu
-# https://github.com/terraform-linters/setup-tflint
-
 name: 'OpenTofu'
 
 on:
@@ -10,8 +7,10 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
+  # https://github.com/terraform-linters/setup-tflint 
   tflint:
     runs-on: ${{ matrix.os }}
 
@@ -46,6 +45,7 @@ jobs:
     - name: Run TFLint
       run: tflint -f compact
 
+  # https://github.com/marketplace/actions/opentofu-setup-tofu
   opentofu:
     name: 'OpenTofu'
     runs-on: ubuntu-latest
@@ -59,6 +59,12 @@ jobs:
         working-directory: "./terraform"
 
     steps:
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: ${{ secrets.ROLE_TO_ASSUME }}
+        aws-region: us-east-2
+
     # Checkout the repository to the GitHub Actions runner
     - name: Checkout
       uses: actions/checkout@v4
